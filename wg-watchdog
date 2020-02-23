@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+
+# Monitor a WireGuard connection and attempt to restart it if the connection is dropped
+
+IDENTIFIER="wg-watchdog"
+
+# log a warning to systemd journal
+function log_warning () {
+    echo $1 | systemd-cat -t $IDENTIFIER -p "warning"
+}
+
+if [ -z $WG_INTERFACE ]
+then
+    WG_INTERFACE=wg0
+    log_warning "WG_INTERFACE is not set; defaulting to $WG_INTERFACE"
+fi
+
+IDENTIFIER="${IDENTIFIER}-${WG_INTERFACE}"
+
+if [ -z $WG_ENDPOINT ]
+then
+    WG_ENDPOINT=10.100.100.1
+    log_warning "WG_ENDPOINT is not set; defaulting to $WG_ENDPOINT"
+fi
+
+# check the endpoint
+ping -c 10 $WG_ENDPOINT > /dev/null 2>&1
+
+if [ $? -gt 0 ]
+then
+    log_warning "Unable to ping $WG_ENDPOINT; attempting to reset connection"
+    systemd-cat -t $IDENTIFIER -p "warning" wg-quick down $WG_INTERFACE
+    systemd-cat -t $IDENTIFIER -p "warning" wg-quick up $WG_INTERFACE
+else
+    echo "$WG_ENDPOINT connection successful" | systemd-cat -t $IDENTIFIER -p "debug"
+fi

@@ -1,0 +1,10 @@
+[Unit]
+Description=wg-watchdog@wg0 timer
+ConditionPathExists=/etc/wireguard/wg0.conf
+
+[Timer]
+OnStartupSec=5m
+OnUnitActiveSec=10m
+
+[Install]
+WantedBy=default.target

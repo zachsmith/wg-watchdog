@@ -1,0 +1,13 @@
+[Unit]
+Description=wg-watchdog for wg0
+ConditionPathExists=/etc/wireguard/wg0.conf
+
+[Service]
+LogLevelMax=warning
+Type=oneshot
+Environment=WG_INTERFACE=wg0
+Environment=WG_ENDPOINT=10.100.100.1
+ExecStart=/usr/local/bin/wg-watchdog
+
+[Install]
+WantedBy=default.target
